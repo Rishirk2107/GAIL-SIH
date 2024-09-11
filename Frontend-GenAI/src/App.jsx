@@ -9,14 +9,17 @@ import ChatHistory from './components/ChatHistory/ChatHistory';
 import AdminPortal from './components/Admin/Admin';
 import CallInterface from './components/ColdCall/ColdCall';
 import Graph from './components/Graph/Graph';
-
+import OtpVerification from './components/Login/otp';
+import AdminDashboard from './components/Login/AdminDB';
 function App() {
   return (
     <Router>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Login />} />
+        <Route path="/otp" element={<OtpVerification/>} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard/>}/>
         <Route path="/userdata" element={<UserData/>}/>
         <Route path="/userprofile" element={<UserProfile/>}/>
         <Route path="/chathistory" element={<ChatHistory/>}/>
