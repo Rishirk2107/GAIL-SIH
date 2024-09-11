@@ -27,21 +27,23 @@ embeddings = None
 def init_llm():
     global llm_hub, embeddings
 
-    # Set up the environment variable for HuggingFace and initialize the desired model
-    os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv('HUGGING_FACE_TOKEN')
-    model_id = "mistralai/Mistral-7B-Instruct-v0.3"
-    
-    # Initialize the model with the correct task without overriding
-    llm_hub = ChatNVIDIA(
-        model="meta/llama-3.1-8b-instruct",
-        api_key=os.getenv('NVIDIA_KEY'), 
-        temperature=0.2,
-        top_p=0.7,
-        max_tokens=1024,
-    )
+    if os.path.isdir('new_folder'):
 
-    # Initialize embeddings using a pre-trained model to represent the text data
-    embeddings = HuggingFaceInstructEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    # Set up the environment variable for HuggingFace and initialize the desired model
+        os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv('HUGGING_FACE_TOKEN')
+        model_id = "mistralai/Mistral-7B-Instruct-v0.3"
+        
+        # Initialize the model with the correct task without overriding
+        llm_hub = ChatNVIDIA(
+            model="meta/llama-3.1-8b-instruct",
+            api_key=os.getenv('NVIDIA_KEY'), 
+            temperature=0.2,
+            top_p=0.7,
+            max_tokens=1024,
+        )
+
+        # Initialize embeddings using a pre-trained model to represent the text data
+        embeddings = HuggingFaceInstructEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 def load_faiss_index():
     global conversation_retrieval_chain
