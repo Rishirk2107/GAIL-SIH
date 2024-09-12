@@ -88,13 +88,12 @@
         
         // Full list of short suggestions
         const allSuggestions = [
-            "Top Engineering Colleges",
-            "Scholarship info",
-            "Admission deadlines",
-            "Program details",
-            "Entrance exams",
-            "Eligibility criteria",
-            "Hostel Details"
+            "HR policies?",
+            "IT support queries?",
+            "Company events?",
+            "Document analysis?",
+            "Document summarization?",
+            "Keyword extraction?",
         ];
         
         const playMicSound = () => {
@@ -267,7 +266,7 @@
                     <div className="flex items-center justify-center w-full text-center space-x-4">
                         <div className="text-[#80cbc4] font-bold text-2xl tracking-wide transition-all duration-300 ease-in-out transform hover:scale-105 hover:text-[#80cbc4] bg-clip-text bg-gradient-to-r from-[#ff8a65] to-[#ff7043]">
                             <p style={{ fontFamily: 'Verdana, Geneva, Tahoma, sans-serif', letterSpacing: '2px', fontSize: '30px' }}>
-                                DISHA MITRA
+                                SEVA MITRA
                             </p>
                         </div>
                     </div>
@@ -313,7 +312,7 @@
         <div className="my-12 text-[38px] md:text-[50px] text-[#00796b] font-medium p-1">
             <p>
                 <span className="bg-gradient-to-r from-[#1b7474] via-[#1b7ab1] to-[#065c52] font-verdana font-bold  bg-clip-text text-transparent">
-                    How can I assist your admission process today?
+                How may I assist you with your queries today?
                 </span>
             </p>
             </div>
@@ -341,9 +340,9 @@
                     {showCards && !showResult && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
                             {[
-                                { icon: assets.compass_icon, text: "Explore top NIRF/NAAC-ranked colleges." },
-                                { icon: assets.college_icon, text: "Best Colleges for Computer Science Engineering." },
-                                { icon: assets.suitcase_icon, text: "Know about Colleges with High placements and better Academic Performance." },
+                                { icon: assets.compass_icon, text: "Explore PSUs Associated with GAIL" },
+                                { icon: assets.college_icon, text: "HR Policies and IT Services of GAIL" },
+                                { icon: assets.suitcase_icon, text: "Are there any recent partnerships between GAIL and other PSUs?" },
                             ].map((item, index) => (
                                 <div
                                     key={index}
