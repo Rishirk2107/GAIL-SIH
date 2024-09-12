@@ -14,21 +14,24 @@ const OtpVerification = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3001/auth/verify-otp', {
+      const response = await fetch('http://localhost:3001/auth/verify', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ otp }),
       });
-
+      
+      const data = await response.json();
+      console.log('Response:', data);  // Log the complete response
       if (response.ok) {
         console.log('OTP verified successfully');
         navigate('/chatbot'); // Redirect to the chatbot page
       } else {
-        const { message } = await response.json();
-        setError(message || 'Invalid OTP. Please try again.');
+        setError(data.message || 'Invalid OTP. Please try again.');
       }
+      
     } catch (error) {
       console.error('Error during OTP verification:', error);
       setError('Internal server error');

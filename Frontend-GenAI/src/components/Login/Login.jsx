@@ -43,8 +43,9 @@ const Login = () => {
       }
 
       // Normal sign-in for other users
-      const response = await fetch('http://localhost:3001/auth/signin', {
+      const response = await fetch('http://localhost:3001/auth/login', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -58,7 +59,7 @@ const Login = () => {
         // Update the username in the context after successful sign-in
         updateUsername(result.username);
 
-        navigate('/otp-verification'); // Redirect to OTP verification page
+        navigate('/otp'); // Redirect to OTP verification page
       } else {
         const { message } = await response.json();
         setServerError(message || 'An error occurred. Please try again.');

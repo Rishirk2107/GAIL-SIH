@@ -2,8 +2,6 @@ const mongoose=require("mongoose");
 const { type } = require("os");
 require("dotenv").config()
 
-mongoose.connect(process.env.MONGO_URI);
-
 const userSchema=mongoose.Schema({
     name:{type:String,required:true},
     email:{type:String,required:true,unique:true},

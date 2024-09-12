@@ -9,12 +9,13 @@
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
+  "proxy": "http://localhost:3001",
   "dependencies": {
     "@google/generative-ai": "^0.16.0",
     "@headlessui/react": "^2.1.2",
     "@hookform/resolvers": "^3.9.0",
     "@mui/icons-material": "^5.16.7",
-    "axios": "^1.7.2",
+    "axios": "^1.7.7",
     "bbq-ieee": "file:",
     "BBQ-IEEE": "file:",
     "bbq-sih-1631": "file:",

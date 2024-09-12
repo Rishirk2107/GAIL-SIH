@@ -13,7 +13,7 @@ from pydantic import BaseModel
 app = FastAPI()
 
 class Message(BaseModel):
-    userMessage: str
+    userMessage : str
 
 origins = ["*"]
 app.add_middleware(
