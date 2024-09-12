@@ -37,8 +37,9 @@ const AdminSignup = () => {
     setServerError(null);
     
     try {
-      const response = await fetch('http://localhost:3001/auth/admin-create-user', { // Adjust endpoint for admin action
+      const response = await fetch('http://localhost:3001/auth/signup', { // Adjust endpoint for admin action
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

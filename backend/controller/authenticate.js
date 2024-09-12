@@ -24,7 +24,7 @@ const loginUser =async(req,res)=>{
                 console.log('Session save error:', err);
             }
         });
-        console.log(req.session)
+        //console.log(req.session)
         gmailer(user.email,otp);
 
         return res.status(200).json({"error":0,"username":user.name,"useremail":email});
@@ -37,10 +37,12 @@ const loginUser =async(req,res)=>{
 
 const registerUser = async (req, res) => {
     try{
+        console.log(req.body);   
     const {fullname,password,email}=req.body;
     console.log(req.body);
     const user=await User.findOne({email});
     if (user){
+        console.log("Email Already exists")
         return res.status(409).json({"error":1});
     }
     const newUser=new User({
@@ -60,7 +62,7 @@ const registerUser = async (req, res) => {
 const verify2fa = async (req,res) => {
     try{
         const {otp} = req.body;
-        console.log(req.session)
+        //console.log(req.session)
         if (otp==req.session.otp){
             return res.status(200).json({"error":0})
         }

@@ -7,7 +7,7 @@ const MongoStore = require('connect-mongo');
 require("dotenv").config()
 
 const authRoutes=require("./routes/authRoutes");
-const issueRoute=require("./routes/issueRoute")
+const issueRoute=require("./routes/issueRoute");
 
 const PORT=process.env.PORT;
 

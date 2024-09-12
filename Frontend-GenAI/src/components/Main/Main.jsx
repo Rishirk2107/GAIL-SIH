@@ -4,7 +4,8 @@
     import { assets } from '../../assets/assets';
     import { Context } from '../../context/Context';
     import { Link } from 'react-router-dom';
-    import Tesseract from 'tesseract.js';   
+    import Tesseract from 'tesseract.js';  
+    import axios from 'axios'; 
 
     const shuffleArray = (array) => {
         let currentIndex = array.length, randomIndex;
@@ -73,13 +74,13 @@
                 formData.append('file', file);
 
                 try {
-                    const response = await fetch('https://rightly-sunny-ibex.ngrok-free.app/api/upload', {
-                        method: 'POST',
-                        body: formData,
-                    });
+                    const response = await axios.post('http://localhost:8000/process-document', formData, {
+                        headers: {
+                          'Content-Type': 'multipart/form-data',
+                        },
+                      });
 
-                    const data = await response.json();
-                    sendMessage(`AI response based on the file: ${data.response}`);
+                    sendMessage(`AI response based on the file: ${response.data.botResponse}`);
                 } catch (error) {
                     console.error('Error uploading file to server:', error);
                 }
@@ -176,7 +177,7 @@
             setMessageSent(true); // Mark that a message has been sent
             
             try {
-                const response = await fetch('https://rightly-sunny-ibex.ngrok-free.app/api/chat', {
+                const response = await fetch('http://localhost:8000/api/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -508,7 +509,7 @@
     {/* Hidden File Input */}
     <input
         type="file"
-        accept="image/*,text/plain"
+        accept="application/pdf"
         onChange={handleFileUpload}
         className="hidden"
         id="fileUpload"

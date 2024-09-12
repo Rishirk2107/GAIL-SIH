@@ -8,7 +8,7 @@ from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain_community.llms import HuggingFaceEndpoint
 from langchain.docstore.document import Document
 
@@ -34,10 +34,10 @@ def init_llm():
     # Initialize the model with the correct task without overriding
     llm_hub = ChatNVIDIA(
         model="meta/llama-3.1-8b-instruct",
-        api_key="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", 
+        api_key=os.getenv("NVIDIA_KEY"), 
         temperature=0.2,
         top_p=0.7,
-        max_tokens=1024,
+        max_tokens=200,
     )
 
     # Initialize embeddings using a pre-trained model to represent the text data
