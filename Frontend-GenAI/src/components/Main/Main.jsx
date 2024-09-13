@@ -1,251 +1,261 @@
-    /* eslint-disable no-unused-vars */
-    /* eslint-disable react-hooks/exhaustive-deps */
-    import { useContext, useState, useEffect, useRef } from 'react';
-    import { assets } from '../../assets/assets';
-    import { Context } from '../../context/Context';
-    import { Link } from 'react-router-dom';
-    import Tesseract from 'tesseract.js';  
-    import axios from 'axios'; 
+/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useContext, useState, useEffect, useRef } from 'react';
+import { assets } from '../../assets/assets';
+import { Context } from '../../context/Context';
+import { Link } from 'react-router-dom';
+import Tesseract from 'tesseract.js';
+import axios from 'axios';
 
-    const shuffleArray = (array) => {
-        let currentIndex = array.length, randomIndex;
+const shuffleArray = (array) => {
+    let currentIndex = array.length, randomIndex;
 
-        while (currentIndex !== 0) {
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex--;
+    while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
 
-            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-        }
-        return array;
-    };
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+    return array;
+};
 
-    const Main = () => {
-        const { showResult, loading, setInput, input, themeColor } = useContext(Context);
-        const [shareOpen, setShareOpen] = useState(false);
-        const lastMessageRef = useRef(null);
-        const inputRef = useRef(null);
-        const [suggestions, setSuggestions] = useState([]);
-        // const [messages, setMessages] = useState([]);
-        const [showCards, setShowCards] = useState(true); // Initially show cards
-        const [isSending, setIsSending] = useState(false);
-        const [typingMessage, setTypingMessage] = useState('');  // For typing effect
-        const [suggestionIndex, setSuggestionIndex] = useState(0); // Track the current suggestion index
-        const [showSuggestions, setShowSuggestions] = useState(false); // Track visibility of suggestions
-        const chatContainerRef = useRef(null);
-        const [hasStartedChatting, setHasStartedChatting] = useState(false);
-        const recognitionRef = useRef(null);  
-        const [,setMessageSent] = useState(false);
-        const [showLanguageDropdown, setShowLanguageDropdown] = useState(false); 
-        const [currentLanguage, setCurrentLanguage] = useState('English');
-        const [showLanguageSelector, setShowLanguageSelector] = useState(false);
-        const [selectedLanguage, setSelectedLanguage] = useState('en'); 
-        const [messages, setMessages] = useState([]);
-        const [email, setEmail] = useState('');
-        const [password, setPassword] = useState('');
-        const [isEmailSubmitted, setIsEmailSubmitted] = useState(false);
-        const [isPasswordSubmitted, setIsPasswordSubmitted] = useState(false);
-        const [isVerified, setIsVerified] = useState(false);
-        const [otp, setOtp] = useState('');
-        const [isOtpSent, setIsOtpSent] = useState(false);
+const Main = () => {
+    const { showResult, loading, setInput, input, themeColor } = useContext(Context);
+    const [shareOpen, setShareOpen] = useState(false);
+    const lastMessageRef = useRef(null);
+    const inputRef = useRef(null);
+    const [suggestions, setSuggestions] = useState([]);
+    const [showCards, setShowCards] = useState(true); // Initially show cards
+    const [isSending, setIsSending] = useState(false);
+    const [typingMessage, setTypingMessage] = useState('');  // For typing effect
+    const [suggestionIndex, setSuggestionIndex] = useState(0); // Track the current suggestion index
+    const [showSuggestions, setShowSuggestions] = useState(false); // Track visibility of suggestions
+    const chatContainerRef = useRef(null);
+    const [hasStartedChatting, setHasStartedChatting] = useState(false);
+    const recognitionRef = useRef(null);  
+    const [,setMessageSent] = useState(false);
+    const [showLanguageDropdown, setShowLanguageDropdown] = useState(false); 
+    const [currentLanguage, setCurrentLanguage] = useState('English');
+    const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+    const [selectedLanguage, setSelectedLanguage] = useState('en'); 
+    const [messages, setMessages] = useState([]);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isEmailSubmitted, setIsEmailSubmitted] = useState(false);
+    const [isPasswordSubmitted, setIsPasswordSubmitted] = useState(false);
+    const [isVerified, setIsVerified] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [isOtpSent, setIsOtpSent] = useState(false);
 
-        const handleEmailSubmit = (e) => {
-            e.preventDefault();
-            if (validateEmail(email)) {
+    const handleEmailSubmit = (e) => {
+        e.preventDefault();
+        if (validateEmail(email)) {
             setIsEmailSubmitted(true);
             // Simulate sending a verification code to the email
             console.log('Verification code sent to:', email);
-            } else {
+        } else {
             alert('Please enter a valid email address.');
-            }
-        };
-        const validateEmail = (email) => {
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailPattern.test(email);
-        };
+        }
+    };
 
-        const handleFileUpload = async (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                // Show the file in the chat as a user message
-                setMessages((prevMessages) => [...prevMessages, { sender: 'user', text: `File: ${file.name}`, file }]);
+    const validateEmail = (email) => {
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailPattern.test(email);
+    };
 
-                // Create FormData object to send the file
-                const formData = new FormData();
-                formData.append('file', file);
-
-                try {
-                    const response = await axios.post('http://localhost:8000/process-document', formData, {
-                        headers: {
-                          'Content-Type': 'multipart/form-data',
-                        },
-                      });
-
-                    sendMessage(`AI response based on the file: ${response.data.botResponse}`);
-                } catch (error) {
-                    console.error('Error uploading file to server:', error);
-                }
-            }
-        };
-        
-        // Full list of short suggestions
-        const allSuggestions = [
-            "HR policies?",
-            "IT support queries?",
-            "Company events?",
-            "Document analysis?",
-            "Document summarization?",
-            "Keyword extraction?",
-        ];
-        
-        const playMicSound = () => {
-            const micSound = new Audio(assets.recognition_sound);
-            micSound.play();
-        }; 
-        
-        useEffect(() => {
-            if (loading) {
-                setIsSending(true);
-            } else {
-                setIsSending(false);
-            }
-        }, [loading]);
-
-        useEffect(() => {
-            if ('webkitSpeechRecognition' in window) {
-                recognitionRef.current = new window.webkitSpeechRecognition();
-                recognitionRef.current.continuous = false;
-                recognitionRef.current.interimResults = false;
-                recognitionRef.current.lang = 'en-US';
-
-                recognitionRef.current.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    setInput(transcript); // Update the input state with the recognized text
-                    sendMessage(transcript); // Send the recognized text as a message
-                };
-
-                recognitionRef.current.onerror = (event) => {
-                    console.error("Speech recognition error:", event.error);
-                };
-            }
-        }, []);
-
-        useEffect(() => {
-            if (!isSending) {
-                // Shuffle and select a few suggestions to show
-                const shuffledSuggestions = shuffleArray([...allSuggestions]);
-                const randomSuggestions = shuffledSuggestions.slice(suggestionIndex, suggestionIndex + 2); // Display 2 suggestions
-                setSuggestions(randomSuggestions);
-            }
-        }, [isSending, suggestionIndex]);
-
-        useEffect(() => {
-            if (chatContainerRef.current) {
-                // Auto scroll to bottom when messages, typingMessage, or suggestions change
-                chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-            }
-        }, [messages, typingMessage, suggestions, isSending]); // Added isSending to the dependencies
-
-        useEffect(() => {
-            if (inputRef.current) {
-                inputRef.current.focus();
-            }
-        }, [messages, isSending]);
-        
-        const startVoiceInput = () => {
-            if (recognitionRef.current) {
-                recognitionRef.current.start(); // Start speech recognition
-            }
-        };
-
-        const handleKeyDown = (e) => {
-            if (e.key === 'Enter' && input.trim() !== '') {
-                e.preventDefault();
-                sendMessage(input);
-            }
-        };
-
-        const sendMessage = async (message) => {
-            // Check if the user is sending their first message
-            if (!hasStartedChatting) {
-                setHasStartedChatting(true); // Hide the intro message when the user sends the first message
-            }
-        
-            // Add the user's message to the messages array
-            setMessages((prevMessages) => [...prevMessages, { sender: 'user', text: message }]);
-            setIsSending(true);
-            setInput('');
-            setMessageSent(true); // Mark that a message has been sent
-
+    const handleFileUpload = async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            // Show the file in the chat as a user message
+            setMessages((prevMessages) => [...prevMessages, { sender: 'user', text: `File: ${file.name}`, file }]);
+    
+            // Create FormData object to send the file
+            const formData = new FormData();
+            formData.append('file', file);
+    
             try {
-                const response = await fetch('http://localhost:8000/api/chat', {
-                    method: 'POST',
+                const response = await axios.post('http://localhost:8000/process-document', formData, {
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'multipart/form-data',
                     },
-                    body: JSON.stringify({ userMessage: message }),
                 });
-        
-                const data = await response.json();
-                console.log(data.botResponse);
-        
-                simulateTyping(data.botResponse);  // Display the AI's response with a typing simulation effect
+    
+                // Display the server's response as the bot's message
+                if (response.data.botResponse) {
+                    setMessages((prevMessages) => [
+                        ...prevMessages,
+                        { sender: 'bot', text: response.data.botResponse } // Display AI's response from the server
+                    ]);
+                }
             } catch (error) {
-                console.error('Error sending message to server:', error);
-                setIsSending(false); // Stop the sending animation if there's an error
+                console.error('Error uploading file to server:', error);
             }
-            
-            updateSuggestions();
-            setShowSuggestions(true); // Ensure suggestions are correctly toggled
-        };
+        }
+    };
+    
+    
+    
+    // Full list of short suggestions
+    const allSuggestions = [
+        "HR policies?",
+        "IT support queries?",
+        "Company events?",
+        "Document analysis?",
+        "Document summarization?",
+        "Keyword extraction?",
+    ];
+    
+    const playMicSound = () => {
+        const micSound = new Audio(assets.recognition_sound);
+        micSound.play();
+    }; 
+    
+    useEffect(() => {
+        if (loading) {
+            setIsSending(true);
+        } else {
+            setIsSending(false);
+        }
+    }, [loading]);
+
+    useEffect(() => {
+        if ('webkitSpeechRecognition' in window) {
+            recognitionRef.current = new window.webkitSpeechRecognition();
+            recognitionRef.current.continuous = false;
+            recognitionRef.current.interimResults = false;
+            recognitionRef.current.lang = 'en-US';
+
+            recognitionRef.current.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                setInput(transcript); // Update the input state with the recognized text
+                sendMessage(transcript); // Send the recognized text as a message
+            };
+
+            recognitionRef.current.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+            };
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!isSending) {
+            // Shuffle and select a few suggestions to show
+            const shuffledSuggestions = shuffleArray([...allSuggestions]);
+            const randomSuggestions = shuffledSuggestions.slice(suggestionIndex, suggestionIndex + 2); // Display 2 suggestions
+            setSuggestions(randomSuggestions);
+        }
+    }, [isSending, suggestionIndex]);
+
+    useEffect(() => {
+        if (chatContainerRef.current) {
+            // Auto scroll to bottom when messages, typingMessage, or suggestions change
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [messages, typingMessage, suggestions, isSending]); // Added isSending to the dependencies
+
+    useEffect(() => {
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [messages, isSending]);
+    
+    const startVoiceInput = () => {
+        if (recognitionRef.current) {
+            recognitionRef.current.start(); // Start speech recognition
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && input.trim() !== '') {
+            e.preventDefault();
+            sendMessage(input);
+        }
+    };
+
+    const sendMessage = async (message) => {
+    // Check if the user is sending their first message
+    if (!hasStartedChatting) {
+        setHasStartedChatting(true); // Hide the intro message when the user sends the first message
+    }
+
+    // Add the user's message to the messages array
+    setMessages((prevMessages) => [...prevMessages, { sender: 'user', text: message }]);
+    setIsSending(true);
+    setInput('');
+    setMessageSent(true); // Mark that a message has been sent
+
+    try {
+        const response = await fetch('http://localhost:8000/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userMessage: message }),
+        });
+
+        const data = await response.json();
+        console.log(data.botResponse);
+
+        // Use simulateTyping to display the AI's response with typing effect
+        simulateTyping(data.botResponse);
         
-        const handleLanguageIconClick = () => {
-            if (!isSending) {
-                setShowLanguageDropdown((prev) => !prev);
-            }
-        };
+    } catch (error) {
+        console.error('Error sending message to server:', error);
+        setIsSending(false); // Stop the sending animation if there's an error
+    }
 
-        // Handle language selection
-        const handleLanguageChange = (language) => {
-            setCurrentLanguage(language); // Update selected language
-            setShowLanguageDropdown(false); // Close the dropdown after selection
-            // Add functionality to switch the app's language here
-        };
+    updateSuggestions();
+    setShowSuggestions(true); // Ensure suggestions are correctly toggled
+};
+    
+    
+    const handleLanguageIconClick = () => {
+        if (!isSending) {
+            setShowLanguageDropdown((prev) => !prev);
+        }
+    };
 
-        const updateSuggestions = () => {
-            setSuggestionIndex((prevIndex) => {
-                const nextIndex = prevIndex + 2;
-                return nextIndex >= allSuggestions.length ? 0 : nextIndex;
+    // Handle language selection
+    const handleLanguageChange = (language) => {
+        setCurrentLanguage(language); // Update selected language
+        setShowLanguageDropdown(false); // Close the dropdown after selection
+        // Add functionality to switch the app's language here
+    };
+
+    const updateSuggestions = () => {
+        setSuggestionIndex((prevIndex) => {
+            const nextIndex = prevIndex + 2;
+            return nextIndex >= allSuggestions.length ? 0 : nextIndex;
+        });
+    };
+
+    const simulateTyping = (message) => {
+        if (!message) return;
+    
+        setTypingMessage(''); // Ensure typing starts from an empty string
+        let currentIndex = 0; // Ensure the starting index is 0
+    
+        const intervalId = setInterval(() => {
+            setTypingMessage((prev) => {
+                // This function will add one character at a time to the message being typed
+                const newMessage = prev + message[currentIndex];
+                currentIndex++;
+    
+                if (currentIndex === message.length) {
+                    clearInterval(intervalId); // Clear interval when the message is fully typed
+                    setMessages((prevMessages) => [...prevMessages, { sender: 'bot', text: message }]); // Save the final bot response
+                    setTypingMessage(''); // Clear typing message after completion
+                    setIsSending(false); // Mark sending as false after typing is complete
+                }
+    
+                return newMessage;
             });
-        };
-
-        const simulateTyping = (message) => {
-            if (!message) return;
-        
-            setTypingMessage(''); // Ensure typing starts from an empty string
-            let currentIndex = 0; // Ensure the starting index is 0
-        
-            const intervalId = setInterval(() => {
-                setTypingMessage((prev) => {
-                    // This function will add one character at a time to the message being typed
-                    const newMessage = prev + message[currentIndex];
-                    currentIndex++;
-        
-                    if (currentIndex === message.length) {
-                        clearInterval(intervalId); // Clear interval when the message is fully typed
-                        setMessages((prevMessages) => [...prevMessages, { sender: 'bot', text: message }]); // Save the final bot response
-                        setTypingMessage(''); // Clear typing message after completion
-                        setIsSending(false); // Mark sending as false after typing is complete
-                    }
-        
-                    return newMessage;
-                });
-            }, 13); // Adjust typing speed as needed
-        };
-        
-        
-        const handleCardClick = (text) => {
-            sendMessage(text);
-        };
+        }, 13); // Adjust typing speed as needed
+    };
+    
+    const handleCardClick = (text) => {
+        sendMessage(text);
+    };
 
         const toggleShare = () => {
             setShareOpen(!shareOpen);
@@ -388,10 +398,10 @@
                 src={msg.sender === "user" ? assets.user_icon : assets.bbq_icon}
                 alt={msg.sender}
                 className="w-8 sm:w-10 rounded-full"
-            />
+            />  
             <div
                 className={`${
-                    msg.sender === "user"
+                    msg.sender=== "user"
                         ? "bg-[#000000] text-white font-verdana text-base sm:text-xl p-2 sm:p-4 rounded-lg shadow-md"
                         : "bg-[#1f628c] text-white font-verdana text-base sm:text-xl p-2 sm:p-4 rounded-lg shadow-md"
                 } max-w-[85%] sm:max-w-[70%] break-words whitespace-pre-wrap leading-relaxed`}
@@ -540,16 +550,18 @@
                         />
         
                         {/* Loader when sending */}
-    {isSending && (
-        <div className="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14">
-            {/* BBQ Logo with rounded shape and spinning animation */}
-            <img
-                src={assets.bbq_icon}
-                alt="BBQ Logo"
-                className="w-full h-full rounded-full object-contain animate-spin"
-            />
-        </div>
-    )}
+                        {isSending && (
+                            <div className="relative flex items-center justify-center w-4 h-4 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 overflow-hidden sm:rounded-full">
+    <img
+      src={assets.bbq_icon}
+      alt="BBQ Logo"
+      className="w-full h-full object-cover animate-spin"
+    />
+  </div>
+)}
+
+
+
                     </div>
                     </div>
                 </div>

@@ -115,24 +115,27 @@ const Sidebar = () => {
                         <p className="text-[#f6c636] font-semibold text-md mt-6 mb-3">ENHANCEMENTS</p>
                         <div className="flex flex-col gap-2">
                             {/* Enhancements Links */}
-                            <Link to="/elite-colleges" className="flex items-center gap-2 p-3 rounded-full bg-[#2a2f33] cursor-pointer hover:bg-[#000000] hover:text-[#508ec5] text-white transition-colors duration-200">
-                                <span className="material-symbols-outlined text-white text-[20px]">
-                                    school
-                                </span>
-                                <p>Elite Colleges</p>
-                            </Link>
-                            <Link to="/placements" className="flex items-center gap-2 p-3 rounded-full bg-[#2a2f33] cursor-pointer hover:bg-[#000000] hover:text-[#508ec5] text-white transition-colors duration-200">
-                                <span className="material-symbols-outlined text-white text-[20px]">
-                                    work
-                                </span>
-                                <p>Scholarships</p>
-                            </Link>
-                            <Link to="/cold-call" className="flex items-center gap-2 p-3 rounded-full bg-[#2a2f33] cursor-pointer hover:bg-[#000000] hover:text-[#508ec5] text-white transition-colors duration-200">
-                                <span className="material-symbols-outlined text-white text-[20px]">
-                                    call
-                                </span>
-                                <p>AI Cold Call</p>
-                            </Link>
+                            <Link to="/psus-of-gail" className="flex items-center gap-2 p-3 rounded-full bg-[#2a2f33] cursor-pointer hover:bg-[#000000] hover:text-[#508ec5] text-white transition-colors duration-200">
+    <span className="material-symbols-outlined text-white text-[20px]">
+        business
+    </span>
+    <p>PSUs of GAIL</p>
+</Link>
+
+<Link to="/hr-policies" className="flex items-center gap-2 p-3 rounded-full bg-[#2a2f33] cursor-pointer hover:bg-[#000000] hover:text-[#508ec5] text-white transition-colors duration-200">
+    <span className="material-symbols-outlined text-white text-[20px]">
+        assignment
+    </span>
+    <p>HR Policies</p>
+</Link>
+
+<Link to="/file-uploads" className="flex items-center gap-2 p-3 rounded-full bg-[#2a2f33] cursor-pointer hover:bg-[#000000] hover:text-[#508ec5] text-white transition-colors duration-200">
+    <span className="material-symbols-outlined text-white text-[20px]">
+        upload
+    </span>
+    <p>Uploads</p>
+</Link>
+
                             {/* <Link to="/graph" className="flex items-center gap-2 p-3 rounded-full bg-[#2a2f33] cursor-pointer hover:bg-[#000000] hover:text-[#508ec5] text-white transition-colors duration-200">
     <span className="material-icons text-white text-[20px]">
         trending_up
