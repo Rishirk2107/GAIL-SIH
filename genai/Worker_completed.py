@@ -23,6 +23,7 @@ conversation_retrieval_chain = None
 chat_history = []
 llm_hub = None
 embeddings = None
+docs=False
 
 def init_llm():
     global llm_hub, embeddings
@@ -61,7 +62,7 @@ def load_faiss_index():
 
 # Function to process a PDF document
 def process_document(document_path):
-    global conversation_retrieval_chain
+    global conversation_retrieval_chain,docs
 
     # Load the document with PyMuPDF
     doc = fitz.open(document_path)
@@ -79,8 +80,14 @@ def process_document(document_path):
     # Convert the chunks into Document objects
     documents = [Document(page_content=text) for text in texts]
 
-    # Create an embeddings database using FAISS from the split text chunks
-    db = FAISS.from_documents(documents=documents, embedding=embeddings)
+    if os.path.isdir("./faiss_index"):
+        # Load the existing FAISS index
+        db = FAISS.load_local("./faiss_index", embeddings, allow_dangerous_deserialization=True)
+        # Add the new documents to the existing index
+        db.add_documents(documents)
+    else:
+        # Create a new FAISS index if it doesn't exist
+        db = FAISS.from_documents(documents=documents, embedding=embeddings)
     
     # Save the FAISS index to disk
     db.save_local("./faiss_index")
@@ -91,77 +98,47 @@ def process_document(document_path):
             return_source_documents=True,
             input_key="question"
         )
-
-def generate_reference_clause(extraction):
-    matching_prompt = (
-        f"Identify and return the most relevant heading and name it as Heading. The heading should be selected based on the presence of a line that starts with either a number, a Roman numeral, or a newline character and ends with a colon, or starts and ends with two newline characters.\n\n"
-        f"Text:\n{extraction}\n\n"
-        f"Relevant Heading:"
-    )
+    docs=True
     
-    # Create a list of messages
-    messages = [{"role": "user", "content": matching_prompt}]
-    
-    # Initialize an empty string to hold the response
-    matching_term = ""
-    
-    # Stream the response
-    for chunk in llm_hub.stream(messages):
-        matching_term += chunk.content
-    
-    return f"Heading: {matching_term.strip()}"
-
-def generate_summary(extraction, prompt):
-    summary_prompt = (
-        f"Based on the following extraction and the question, provide a detailed summary if the question is available in the PDF, otherwise indicate unavailability:\n\n"
-        f"Extraction:\n{extraction}\n\n"
-        f"Question:\n{prompt}\n\n"
-        f"Summary:"
-    )
-    
-    # Create a list of messages
-    messages = [{"role": "user", "content": summary_prompt}]
-    
-    # Initialize an empty string to hold the response
-    generated_text = ""
-    
-    # Stream the response
-    for chunk in llm_hub.stream(messages):
-        generated_text += chunk.content
-    
-    return generated_text.strip()
-
-
 
 def process_prompt(prompt):
     global conversation_retrieval_chain
     global chat_history
+    global docs
 
-    # Query the model
+    # Query the model to get the answer and source documents
     output = conversation_retrieval_chain({"question": prompt, "chat_history": chat_history})
     answer = output["result"]
-    # sources = output["source_documents"]
-    # print(sources)
+    sources = output["source_documents"]
+    if(docs):
+        # Prepare the structured input using the extracted sources
+        structured_input = f"""
+        The following are extraction from various documents related to the question: '{prompt}'.
+        Please organize the content into subheadings and contents based on their relevance and give it relevant contents in a brief way:
 
-    # # If there are no source documents or the answer is too vague, return "I don't know."
-    # if not sources or len(answer.strip()) == 0 or "I don't know" in answer.lower():
-    #     return "I don't know the answer to that."
+        """
+        
+        for i, doc in enumerate(sources):
+            # Add each source document's content
+            structured_input += f"Source {i + 1}:\n{doc.page_content.strip()}\n\n"
+        
+        # Create a prompt for structuring the content
+        structuring_prompt = f"""
+        Please organize the following text into clear subheadings and contents:
+        {structured_input}
+        """
 
-    # extraction = "\n".join([source.page_content for source in sources])
+        # Stream the structured output from the LLM using ChatNVIDIA
+        structured_output = ""
+        for chunk in llm_hub.stream([{"role": "user", "content": structuring_prompt}]):
+            structured_output += chunk.content
 
-    # # Generate and apply the summary
-    # summary = generate_summary(extraction, answer)
-    # reference = generate_reference_clause(extraction)
+        # Combine the answer and structured output into a single string
+        combined_output = f"**Answer:**\n{answer}\n\n**Extraction:**\n{structured_output}"
 
-    # s = "Reference:\n" + reference + "\n\n"
-    # s += ("Extraction:\n" + extraction + "\n\n")
-    # s += ("Summary:\n" + summary)
-
-    # # Update the chat history
-    # chat_history.append((prompt, s))
-
-    # Return the summary
+        return combined_output
     return answer
+
 
 # Initialize the language model
 init_llm()

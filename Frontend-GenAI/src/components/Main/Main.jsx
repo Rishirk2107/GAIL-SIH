@@ -175,7 +175,7 @@
             setIsSending(true);
             setInput('');
             setMessageSent(true); // Mark that a message has been sent
-            
+
             try {
                 const response = await fetch('http://localhost:8000/api/chat', {
                     method: 'POST',
