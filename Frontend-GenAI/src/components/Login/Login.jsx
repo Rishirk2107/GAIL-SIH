@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react';
 import { FiMail } from "react-icons/fi";
 import { RiLockPasswordLine } from "react-icons/ri";
-import { useNavigate } from 'react-router-dom';
+import { Link,useNavigate } from 'react-router-dom';
 import { Context } from '../../context/Context'; // Import Context
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -127,6 +127,9 @@ const Login = () => {
             >
               {loading ? 'Signing In...' : 'SIGN IN'}
             </button>
+            <div className='dont mt-8 text-center text-gray-400'>
+          <p>Are you an Admin? <Link to="/admin-create-user"><span className="text-[#bd4b37] hover:text-[#9c3f30] transition duration-300 ease-in-out">Create Users</span></Link></p>
+        </div>
           </div>
         </form>
 

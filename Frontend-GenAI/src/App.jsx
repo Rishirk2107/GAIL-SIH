@@ -2,15 +2,12 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Sidebar from './components/Sidebar/Sidebar';
 import Main from './components/Main/Main';
 import Login from './components/Login/Login'; 
-import Signup from './components/Signup/Signup';
+import Signup from './components/Admin/Admin';
 import UserData from './components/UserData/UserData'; 
 import UserProfile from './components/UserProfile/UserProfile';
 import ChatHistory from './components/ChatHistory/ChatHistory';
-import AdminPortal from './components/Admin/Admin';
-import CallInterface from './components/ColdCall/ColdCall';
-import Graph from './components/Graph/Graph';
 import OtpVerification from './components/Login/otp';
-import AdminDashboard from './components/Login/AdminDB';
+import AdminDashboard from './components/Admin/AdminDB';
 function App() {
   return (
     <Router>
@@ -18,14 +15,11 @@ function App() {
         {/* Public Routes */}
         <Route path="/" element={<Login />} />
         <Route path="/otp" element={<OtpVerification/>} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/admin-create-user" element={<Signup />} />
         <Route path="/admin-dashboard" element={<AdminDashboard/>}/>
         <Route path="/userdata" element={<UserData/>}/>
         <Route path="/userprofile" element={<UserProfile/>}/>
         <Route path="/chathistory" element={<ChatHistory/>}/>
-        <Route path="/admin-portal" element={<AdminPortal/>}/>
-        <Route path="/cold-call" element={<CallInterface/>}/>
-        <Route path="/graph" element={<Graph/>}/>
         {/* Protected Routes (Sidebar only visible here) */}
         <Route
           path="/chatbot"

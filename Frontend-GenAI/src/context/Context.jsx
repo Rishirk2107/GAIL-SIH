@@ -13,7 +13,7 @@ const ContextProvider = (props) => {
     const [loading, setLoading] = useState(false);
     const [resultData, setResultData] = useState("");
     const [themeColor, setThemeColor] = useState("#e9f1f7");
-    
+
     // User Profile State
     const [userProfile, setUserProfile] = useState({
         group12: '',
@@ -35,10 +35,30 @@ const ContextProvider = (props) => {
 
     // State for Username
     const [username, setUsername] = useState("");
-    const [useremail, setuseremail]=useState(""); // New state to store the username
+    const [useremail, setuseremail] = useState(""); 
+
+    // State for authentication
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     const updateUsername = (name) => {
         setUsername(name);
+    };
+
+    const handleLogin = (userEmail, userPassword) => {
+        // Implement your authentication logic here
+        if (userEmail && userPassword) { // Replace with actual authentication check
+            setIsAuthenticated(true); // Update authentication state upon successful login
+            setUsername(userEmail); // Set the user's email or name
+            setuseremail(userEmail); // Store user email
+        } else {
+            setIsAuthenticated(false);
+        }
+    };
+
+    const handleLogout = () => {
+        setIsAuthenticated(false);
+        setUsername("");
+        setuseremail("");
     };
 
     const delayPara = (index, nextWord) => {
@@ -138,6 +158,9 @@ const ContextProvider = (props) => {
         updateUsername,
         useremail,
         setuseremail,
+        isAuthenticated,  // Authentication state
+        handleLogin,      // Function to handle login
+        handleLogout      // Function to handle logout
     };
 
     return (

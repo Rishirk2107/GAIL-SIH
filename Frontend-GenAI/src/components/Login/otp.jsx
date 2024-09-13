@@ -1,17 +1,41 @@
-import { useState } from 'react';
+import { useContext, useState, useEffect } from 'react'; 
 import { useNavigate } from 'react-router-dom';
+import { Context } from '../../context/Context'; // Ensure this is the correct path
+import { ToastContainer, toast } from 'react-toastify'; // Import react-toastify
+import 'react-toastify/dist/ReactToastify.css'; // Import the default CSS for react-toastify
 
 const OtpVerification = () => {
   const navigate = useNavigate();
+  const { handleLogin } = useContext(Context); // Access login method from context
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [timer, setTimer] = useState(30); // Timer set for 30 seconds
+  const [timerActive, setTimerActive] = useState(true); // To control timer status
 
-  // Handle OTP submission
+  useEffect(() => {
+    let timerInterval;
+    if (timerActive && timer > 0) {
+      timerInterval = setInterval(() => {
+        setTimer(prev => prev - 1);
+      }, 1000);
+    } else if (timer <= 0) {
+      toast.error('OTP has expired. Please request a new OTP.', {
+        className: 'bg-red-600 text-white border border-red-700 shadow-lg rounded-lg',
+        bodyClassName: 'text-base font-semibold',
+        progressClassName: 'bg-red-400'
+      }); // Toast for expired OTP
+      setTimerActive(false); // Stop the timer
+    }
+    return () => clearInterval(timerInterval);
+  }, [timer, timerActive]);
+
   const handleOtpSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+    e.preventDefault(); // Prevent default form submission behavior
+    if (timer <= 0) return; // Do not submit if OTP has expired
+
+    setLoading(true); // Show loading state
+    setError(''); // Clear any previous error messages
 
     try {
       const response = await fetch('http://localhost:3001/auth/verify', {
@@ -20,24 +44,44 @@ const OtpVerification = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ otp }),
+        body: JSON.stringify({ otp }), // Send OTP as JSON to backend
       });
-      
-      const data = await response.json();
-      console.log('Response:', data);  // Log the complete response
+
+      const data = await response.json(); // Parse the JSON response from the server
       if (response.ok) {
-        console.log('OTP verified successfully');
-        navigate('/chatbot'); // Redirect to the chatbot page
+        toast.success('OTP verified successfully!', {
+          className: 'bg-green-600 text-white border border-green-700 shadow-lg rounded-lg',
+          bodyClassName: 'text-base font-semibold',
+          progressClassName: 'bg-green-500'
+        }); // Success toast
+        setTimeout(() => {
+          handleLogin(data.email, ''); // Call the login function from the context
+          navigate('/chatbot'); // Redirect the user to the chatbot page after the toast
+        }, 2000); // Delay redirect to allow toast to show
       } else {
-        setError(data.message || 'Invalid OTP. Please try again.');
+        toast.error(data.message || 'Invalid OTP. Please try again.', {
+          className: 'bg-red-600 text-white border border-red-700 shadow-lg rounded-lg',
+          bodyClassName: 'text-base font-semibold',
+          progressClassName: 'bg-red-400'
+        }); // Error toast if verification fails
       }
-      
     } catch (error) {
       console.error('Error during OTP verification:', error);
-      setError('Internal server error');
+      toast.error('Internal server error', {
+        className: 'bg-red-600 text-white border border-red-700 shadow-lg rounded-lg',
+        bodyClassName: 'text-base font-semibold',
+        progressClassName: 'bg-red-400'
+      }); // Display an error toast if the request fails
     } finally {
-      setLoading(false);
+      setLoading(false); // Hide the loading state
     }
+  };
+
+  // Convert seconds to MM:SS format for display
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
   return (
@@ -46,10 +90,8 @@ const OtpVerification = () => {
         <h2 className="text-3xl font-extrabold mb-8 text-center tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#c04934] to-[#17bbbb]">
           OTP Verification
         </h2>
-        
-        {/* Error Alert */}
-        {error && <div className="bg-red-500 text-white px-4 py-2 rounded mb-4">{error}</div>}
-        
+        {error && <div className="bg-red-700 text-white px-4 py-2 rounded mb-4">{error}</div>}
+        <p className="text-white mb-4">Time remaining: {formatTime(timer)}</p> {/* Timer display */}
         <form onSubmit={handleOtpSubmit} className="space-y-6">
           <div className="inputBox">
             <label htmlFor="otp" className="text-white">Enter OTP</label>
@@ -62,17 +104,16 @@ const OtpVerification = () => {
               className="w-full px-4 py-3 mt-2 text-gray-900 bg-gray-200 bg-opacity-90 border border-transparent rounded-lg focus:outline-none focus:ring-4 focus:ring-[#bd4b37] focus:ring-opacity-50 transition duration-300 ease-in-out"
             />
           </div>
-
-          {/* Submit Button */}
           <button
             type="submit"
             className={`w-full py-3 bg-gradient-to-r from-[#bd4b37] to-[#125151] hover:from-[#9c3f30] hover:to-[#0a3939] text-white font-semibold rounded-lg transition duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg ${loading ? 'cursor-not-allowed' : ''}`}
-            disabled={loading}
+            disabled={loading || timer <= 0} // Disable button if OTP expired
           >
             {loading ? 'Verifying...' : 'Verify OTP'}
           </button>
         </form>
       </div>
+      <ToastContainer /> {/* Add ToastContainer here */}
     </div>
   );
 };
