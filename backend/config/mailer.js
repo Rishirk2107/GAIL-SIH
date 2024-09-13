@@ -18,7 +18,7 @@ const transporter=nodemailer.createTransport({
 const gmailer=async(email,otp)=>{
     transporter.sendMail({
       to:email,
-      subject:"SEVA MITRA-GAIL",
+      subject:"SEVA MITRA GenAI Chatbot-GAIL",
       html:`
       
   <!DOCTYPE html>
