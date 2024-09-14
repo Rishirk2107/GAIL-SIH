@@ -15,13 +15,12 @@ const transporter=nodemailer.createTransport({
   }
 })
 
-const gmailer=async(email,otp)=>{
+const gmailer=async(email,otp,username)=>{
     transporter.sendMail({
       to:email,
-      subject:"SEVA MITRA GenAI Chatbot-GAIL",
+      subject:"Seva Mitra Verification",
       html:`
-      
-  <!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -30,62 +29,66 @@ const gmailer=async(email,otp)=>{
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #f0f2f5;
+            background-color: #f4f6f9;
             margin: 0;
             padding: 0;
             text-align: center;
             color: #333;
+            line-height: 1.6;
         }
         .container {
             width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
+            max-width: 500px;
+            margin: 40px auto;
             background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: left;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            text-align: center; /* Center content */
         }
         .banner-image {
-            width: 100%;
-            max-width: 200px; /* Adjust as needed */
-            height: auto;
-            border-radius: 8px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%; /* Circular logo */
             display: block;
             margin: 0 auto 20px auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow for emphasis */
         }
         .custom-heading {
             color: #2c3e50;
-            font-size: 28px;
-            margin: 20px 0;
+            font-size: 26px;
             font-weight: bold;
-            line-height: 1.3;
+            margin: 20px 0;
+            line-height: 1.4;
         }
         .event-details {
             color: #555;
             font-size: 16px;
-            margin: 10px 0;
-            line-height: 1.6;
+            margin-bottom: 20px;
+            padding: 0 20px;
+            text-align: left;
         }
         .otp-code {
             color: #2e7d32; /* Green color for OTP */
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
             background-color: #e8f5e9;
-            padding: 12px;
-            border-radius: 5px;
+            padding: 15px 30px;
+            border-radius: 8px;
             display: inline-block;
+            margin: 20px auto;
         }
         .note {
             background-color: #fff8e1;
             border-left: 5px solid #ff9800;
-            padding: 15px;
+            padding: 15px 20px;
             margin: 20px 0;
             border-radius: 5px;
             font-size: 14px;
+            text-align: left;
         }
         .footer {
-            margin-top: 20px;
+            margin-top: 30px;
             font-size: 14px;
             color: #777;
             line-height: 1.5;
@@ -99,36 +102,54 @@ const gmailer=async(email,otp)=>{
         }
         @media (max-width: 600px) {
             .container {
-                padding: 15px;
+                padding: 20px;
+                margin: 20px auto;
             }
             .custom-heading {
-                font-size: 24px;
+                font-size: 22px;
             }
             .otp-code {
                 font-size: 20px;
+                padding: 10px 25px;
+            }
+            .event-details, .note {
+                padding: 0 10px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Banner Image -->
+        <!-- Circular Banner Image -->
         <img src="https://i.ibb.co/XC4Q5Td/BBQ-Logo.png" alt="AI Logo" class="banner-image">
         
-        <h1 class="custom-heading">Welcome to Seva Mitra</h1>
+        <h1 class="custom-heading">SEVA MITRA - GAIL</h1>
         
         <p class="event-details">
-            Your OTP for verification is: <span class="otp-code">${otp}</span>. This OTP is valid for your email: <strong>${email}</strong>.
+            Dear <strong>${username}</strong>,
+            <br><br>
+            To protect your account, please use the following One-Time Password (OTP) to complete your sign-in to Seva Mitra.
         </p>
-        
+
+        <p class="otp-code">${otp}</p>
+
+        <p class="event-details">
+            This OTP is valid for the next <strong>5 minutes</strong>. If you didn’t request this, please contact our support team.
+        </p>
+
         <div class="note">
-            <strong>Please Note:</strong><br>
-            Seva Mitra is a chatbot for GAIL. This OTP is unique to your account and should not be shared with anyone. Keep it confidential to ensure your account's security.
+            <strong>Important Security Notice:</strong><br>
+            Please do not share this code with anyone. Our support team will never ask for your password or OTP.
         </div>
-        
+
         <p class="event-details">
-            Thank you for using Seva Mitra! If you have any questions or need assistance, please <a href="mailto:support@yourdomain.com">contact our support team</a>.
+            Thank you for using Seva Mitra! If you have any questions, please <a href="mailto:support@yourdomain.com">contact support</a>.
         </p>
+
+        <div class="footer">
+            Best regards,<br>
+            The Seva Mitra Team
+        </div>
     </div>
 </body>
 </html>

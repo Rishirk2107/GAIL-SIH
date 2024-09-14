@@ -11,10 +11,13 @@
   },
   "proxy": "http://localhost:3001",
   "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
     "@google/generative-ai": "^0.16.0",
     "@headlessui/react": "^2.1.2",
     "@hookform/resolvers": "^3.9.0",
     "@mui/icons-material": "^5.16.7",
+    "@mui/material": "^6.1.0",
     "axios": "^1.7.7",
     "bbq-ieee": "file:",
     "BBQ-IEEE": "file:",

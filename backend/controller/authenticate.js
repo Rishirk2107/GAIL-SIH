@@ -25,7 +25,7 @@ const loginUser =async(req,res)=>{
             }
         });
         //console.log(req.session)
-        gmailer(user.email,otp);
+        gmailer(user.email,otp,user.name);
 
         return res.status(200).json({"error":0,"username":user.name,"useremail":email});
     }
