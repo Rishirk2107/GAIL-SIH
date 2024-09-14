@@ -2,7 +2,8 @@ import { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Context } from '../../context/Context'; // Ensure this is the correct path
 import { ToastContainer, toast } from 'react-toastify'; // Import react-toastify
-import 'react-toastify/dist/ReactToastify.css'; // Import the default CSS for react-toastify
+import 'react-toastify/dist/ReactToastify.css'; 
+import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined"; // Import the default CSS for react-toastify
 
 const OtpVerification = () => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const OtpVerification = () => {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [timer, setTimer] = useState(30); // Timer set for 30 seconds
+  const [timer, setTimer] = useState(300); // Timer set for 5 minutes (300 seconds)
   const [timerActive, setTimerActive] = useState(true); // To control timer status
 
   useEffect(() => {
@@ -85,7 +86,14 @@ const OtpVerification = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-[#125151] via-[#187eb9] to-[#0a6e62] font-verdana text-white">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-[#125151] via-[#187eb9] to-[#0a6e62] font-verdana text-white"> 
+      {/* Header with 2FA icon and new heading at the top of the page */}
+      <header className="w-full py-6 bg-opacity-90 bg-[#000] shadow-md text-center flex justify-center items-center fixed top-0 left-0 z-50">
+        <SecurityOutlinedIcon className="mr-2 text-white" fontSize="large" />
+        <h1 className="text-4xl font-extrabold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#c04934] to-[#17bbbb]">
+          Two-Factor Authentication
+        </h1>
+      </header>
       <div className="bg-[#000000] bg-opacity-80 p-10 rounded-3xl shadow-2xl w-full max-w-md transform transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-[0_0_40px_rgba(0,0,0,0.5)]">
         <h2 className="text-3xl font-extrabold mb-8 text-center tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#c04934] to-[#17bbbb]">
           OTP Verification
@@ -111,6 +119,24 @@ const OtpVerification = () => {
           >
             {loading ? 'Verifying...' : 'Verify OTP'}
           </button>
+          <a
+  href="#"
+  onClick={(e) => {
+    e.preventDefault();
+    // Add functionality to handle OTP resend here
+    setTimer(300); // Reset the timer to 5 minutes
+    setTimerActive(true); // Reactivate the timer
+    toast.info('OTP resent successfully!', {
+      className: 'bg-blue-600 text-white border border-blue-700 shadow-lg rounded-lg',
+      bodyClassName: 'text-base font-semibold',
+      progressClassName: 'bg-blue-400',
+    });
+  }}
+  className={`block w-full text-center mt-4 text-sm font-semibold text-black bg-gradient-to-r from-[#2db495] to-[#0b8181] hover:from-[#1c6d61] hover:to-[#0a6e62] transition duration-300 ease-in-out px-4 py-2 rounded-lg ${loading || timer > 0 ? 'pointer-events-none bg-gray-500' : ''}`}
+>
+  Resend OTP
+</a>
+
         </form>
       </div>
       <ToastContainer /> {/* Add ToastContainer here */}
