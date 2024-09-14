@@ -2,9 +2,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useContext, useState, useEffect, useRef } from 'react';
 import { assets } from '../../assets/assets';
-import { Context } from '../../context/Context';
 import { Link } from 'react-router-dom';
-import Tesseract from 'tesseract.js';
+import { Context } from '../../context/Context';
 import axios from 'axios';
 
 const shuffleArray = (array) => {
@@ -25,19 +24,18 @@ const Main = () => {
     const lastMessageRef = useRef(null);
     const inputRef = useRef(null);
     const [suggestions, setSuggestions] = useState([]);
-    const [showCards, setShowCards] = useState(true); // Initially show cards
+    const [showCards, setShowCards] = useState(true);
     const [isSending, setIsSending] = useState(false);
-    const [typingMessage, setTypingMessage] = useState('');  // For typing effect
-    const [suggestionIndex, setSuggestionIndex] = useState(0); // Track the current suggestion index
-    const [showSuggestions, setShowSuggestions] = useState(false); // Track visibility of suggestions
+    const [typingMessage, setTypingMessage] = useState('');
+    const [suggestionIndex, setSuggestionIndex] = useState(0);
+    const [showSuggestions, setShowSuggestions] = useState(false);
     const chatContainerRef = useRef(null);
     const [hasStartedChatting, setHasStartedChatting] = useState(false);
-    const recognitionRef = useRef(null);  
-    const [,setMessageSent] = useState(false);
-    const [showLanguageDropdown, setShowLanguageDropdown] = useState(false); 
+    const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
     const [currentLanguage, setCurrentLanguage] = useState('English');
     const [showLanguageSelector, setShowLanguageSelector] = useState(false);
-    const [selectedLanguage, setSelectedLanguage] = useState('en'); 
+    const recognitionRef = useRef(null);
+    const [, setMessageSent] = useState(false);
     const [messages, setMessages] = useState([]);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -47,11 +45,19 @@ const Main = () => {
     const [otp, setOtp] = useState('');
     const [isOtpSent, setIsOtpSent] = useState(false);
 
+    const allSuggestions = [
+        "HR policies?",
+        "IT support queries?",
+        "Company events?",
+        "Document analysis?",
+        "Document summarization?",
+        "Keyword extraction?",
+    ];
+
     const handleEmailSubmit = (e) => {
         e.preventDefault();
         if (validateEmail(email)) {
             setIsEmailSubmitted(true);
-            // Simulate sending a verification code to the email
             console.log('Verification code sent to:', email);
         } else {
             alert('Please enter a valid email address.');
@@ -66,25 +72,20 @@ const Main = () => {
     const handleFileUpload = async (event) => {
         const file = event.target.files[0];
         if (file) {
-            // Show the file in the chat as a user message
             setMessages((prevMessages) => [...prevMessages, { sender: 'user', text: `File: ${file.name}`, file }]);
-    
-            // Create FormData object to send the file
+
             const formData = new FormData();
             formData.append('file', file);
-    
+
             try {
                 const response = await axios.post('http://localhost:8000/process-document', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
+                    headers: { 'Content-Type': 'multipart/form-data' },
                 });
-    
-                // Display the server's response as the bot's message
+
                 if (response.data.botResponse) {
                     setMessages((prevMessages) => [
                         ...prevMessages,
-                        { sender: 'bot', text: response.data.botResponse } // Display AI's response from the server
+                        { sender: 'bot', text: response.data.botResponse }
                     ]);
                 }
             } catch (error) {
@@ -92,24 +93,12 @@ const Main = () => {
             }
         }
     };
-    
-    
-    
-    // Full list of short suggestions
-    const allSuggestions = [
-        "HR policies?",
-        "IT support queries?",
-        "Company events?",
-        "Document analysis?",
-        "Document summarization?",
-        "Keyword extraction?",
-    ];
-    
+
     const playMicSound = () => {
         const micSound = new Audio(assets.recognition_sound);
         micSound.play();
-    }; 
-    
+    };
+
     useEffect(() => {
         if (loading) {
             setIsSending(true);
@@ -127,8 +116,8 @@ const Main = () => {
 
             recognitionRef.current.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
-                setInput(transcript); // Update the input state with the recognized text
-                sendMessage(transcript); // Send the recognized text as a message
+                setInput(transcript);
+                sendMessage(transcript);
             };
 
             recognitionRef.current.onerror = (event) => {
@@ -139,29 +128,27 @@ const Main = () => {
 
     useEffect(() => {
         if (!isSending) {
-            // Shuffle and select a few suggestions to show
             const shuffledSuggestions = shuffleArray([...allSuggestions]);
-            const randomSuggestions = shuffledSuggestions.slice(suggestionIndex, suggestionIndex + 2); // Display 2 suggestions
+            const randomSuggestions = shuffledSuggestions.slice(suggestionIndex, suggestionIndex + 2);
             setSuggestions(randomSuggestions);
         }
     }, [isSending, suggestionIndex]);
 
     useEffect(() => {
         if (chatContainerRef.current) {
-            // Auto scroll to bottom when messages, typingMessage, or suggestions change
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
-    }, [messages, typingMessage, suggestions, isSending]); // Added isSending to the dependencies
+    }, [messages, typingMessage, suggestions, isSending]);
 
     useEffect(() => {
         if (inputRef.current) {
             inputRef.current.focus();
         }
     }, [messages, isSending]);
-    
+
     const startVoiceInput = () => {
         if (recognitionRef.current) {
-            recognitionRef.current.start(); // Start speech recognition
+            recognitionRef.current.start();
         }
     };
 
@@ -173,53 +160,43 @@ const Main = () => {
     };
 
     const sendMessage = async (message) => {
-    // Check if the user is sending their first message
-    if (!hasStartedChatting) {
-        setHasStartedChatting(true); // Hide the intro message when the user sends the first message
-    }
+        if (!hasStartedChatting) {
+            setHasStartedChatting(true);
+        }
 
-    // Add the user's message to the messages array
-    setMessages((prevMessages) => [...prevMessages, { sender: 'user', text: message }]);
-    setIsSending(true);
-    setInput('');
-    setMessageSent(true); // Mark that a message has been sent
+        setMessages((prevMessages) => [...prevMessages, { sender: 'user', text: message }]);
+        setIsSending(true);
+        setInput('');
+        setMessageSent(true);
 
-    try {
-        const response = await fetch('http://localhost:8000/api/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userMessage: message }),
-        });
+        try {
+            const response = await fetch('http://localhost:8000/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userMessage: message }),
+            });
 
-        const data = await response.json();
-        console.log(data.botResponse);
+            const data = await response.json();
+            console.log(data.botResponse);
+            simulateTyping(data.botResponse);
+        } catch (error) {
+            console.error('Error sending message to server:', error);
+            setIsSending(false);
+        }
 
-        // Use simulateTyping to display the AI's response with typing effect
-        simulateTyping(data.botResponse);
-        
-    } catch (error) {
-        console.error('Error sending message to server:', error);
-        setIsSending(false); // Stop the sending animation if there's an error
-    }
+        updateSuggestions();
+        setShowSuggestions(true);
+    };
 
-    updateSuggestions();
-    setShowSuggestions(true); // Ensure suggestions are correctly toggled
-};
-    
-    
     const handleLanguageIconClick = () => {
         if (!isSending) {
             setShowLanguageDropdown((prev) => !prev);
         }
     };
 
-    // Handle language selection
     const handleLanguageChange = (language) => {
-        setCurrentLanguage(language); // Update selected language
-        setShowLanguageDropdown(false); // Close the dropdown after selection
-        // Add functionality to switch the app's language here
+        setCurrentLanguage(language);
+        setShowLanguageDropdown(false);
     };
 
     const updateSuggestions = () => {
@@ -232,43 +209,51 @@ const Main = () => {
     const simulateTyping = (message) => {
         if (!message) return;
     
-        setTypingMessage(''); // Ensure typing starts from an empty string
-        let currentIndex = 0; // Ensure the starting index is 0
+        setTypingMessage('');
+        let currentIndex = 0;
     
         const intervalId = setInterval(() => {
             setTypingMessage((prev) => {
-                // This function will add one character at a time to the message being typed
                 const newMessage = prev + message[currentIndex];
                 currentIndex++;
     
                 if (currentIndex === message.length) {
-                    clearInterval(intervalId); // Clear interval when the message is fully typed
-                    setMessages((prevMessages) => [...prevMessages, { sender: 'bot', text: message }]); // Save the final bot response
-                    setTypingMessage(''); // Clear typing message after completion
-                    setIsSending(false); // Mark sending as false after typing is complete
+                    clearInterval(intervalId);
+    
+                    // Check if the last message already exists before appending
+                    setMessages((prevMessages) => {
+                        const lastMessage = prevMessages[prevMessages.length - 1];
+                        if (lastMessage?.text !== message) {
+                            return [...prevMessages, { sender: 'bot', text: message }];
+                        }
+                        return prevMessages;
+                    });
+    
+                    setTypingMessage('');
+                    setIsSending(false);
                 }
     
                 return newMessage;
             });
-        }, 13); // Adjust typing speed as needed
+        }, 13);
     };
     
     const handleCardClick = (text) => {
         sendMessage(text);
     };
 
-        const toggleShare = () => {
-            setShareOpen(!shareOpen);
-        };
-        
-        const scrollToBottom = () => {
-            chatContainerRef.current?.scrollIntoView({ behavior: 'smooth' });
-        };
-        
-        useEffect(() => {
-            scrollToBottom();
-        }, []);
-        
+    const toggleShare = () => {
+        setShareOpen(!shareOpen);
+    };
+
+    const scrollToBottom = () => {
+        chatContainerRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
 
         return (
             <div className='flex flex-col min-h-screen relative' style={{ backgroundColor: themeColor }}>
@@ -398,10 +383,10 @@ const Main = () => {
                 src={msg.sender === "user" ? assets.user_icon : assets.bbq_icon}
                 alt={msg.sender}
                 className="w-8 sm:w-10 rounded-full"
-            />  
+            />
             <div
                 className={`${
-                    msg.sender=== "user"
+                    msg.sender === "user"
                         ? "bg-[#000000] text-white font-verdana text-base sm:text-xl p-2 sm:p-4 rounded-lg shadow-md"
                         : "bg-[#1f628c] text-white font-verdana text-base sm:text-xl p-2 sm:p-4 rounded-lg shadow-md"
                 } max-w-[85%] sm:max-w-[70%] break-words whitespace-pre-wrap leading-relaxed`}
@@ -423,12 +408,11 @@ const Main = () => {
                         if (!isOrderedList) {
                             // Close unordered list if we were inside it
                             if (listItems.length > 0) {
-                                return (
-                                    <>
-                                        <ul className="list-disc ml-5 mb-2">{listItems}</ul>
-                                        {listItems = []}
-                                    </>
+                                const ulList = (
+                                    <ul className="list-disc ml-5 mb-2">{listItems}</ul>
                                 );
+                                listItems = []; // Reset listItems after rendering
+                                return ulList;
                             }
                             isOrderedList = true;
                         }
@@ -438,9 +422,11 @@ const Main = () => {
                         if (isInsideList) {
                             // Close current list if we were inside one
                             isInsideList = false;
-                            return isOrderedList
+                            const listToRender = isOrderedList
                                 ? <ol className="list-decimal ml-5 mb-2">{listItems}</ol>
                                 : <ul className="list-disc ml-5 mb-2">{listItems}</ul>;
+                            listItems = []; // Clear list items after rendering the list
+                            return listToRender;
                         }
                         return <p key={i} className="mb-2" dangerouslySetInnerHTML={{ __html: formattedLine }} />;
                     }
@@ -454,6 +440,7 @@ const Main = () => {
         </div>
     );
 })}
+
                             {typingMessage && (
                                 <div className="flex items-start gap-5 justify-start">
                                     <img src={assets.bbq_icon} alt="AI" className="w-10 rounded-full" />
