@@ -235,7 +235,7 @@ const Main = () => {
     
                 return newMessage;
             });
-        }, 13);
+        }, 9);
     };
     
     const handleCardClick = (text) => {
@@ -247,12 +247,13 @@ const Main = () => {
     };
 
     const scrollToBottom = () => {
-        chatContainerRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
     };
-
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [messages, typingMessage, suggestions, isSending]);
 
 
         return (
@@ -546,9 +547,6 @@ const Main = () => {
     />
   </div>
 )}
-
-
-
                     </div>
                     </div>
                 </div>
