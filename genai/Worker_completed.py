@@ -6,7 +6,6 @@ from langchain_core.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
-from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_community.llms import HuggingFaceEndpoint
@@ -38,7 +37,7 @@ def init_llm():
         api_key=os.getenv("NVIDIA_KEY"), 
         temperature=0.2,
         top_p=0.7,
-        max_tokens=200,
+        max_tokens=600,
     )
 
     # Initialize embeddings using a pre-trained model to represent the text data
@@ -74,22 +73,17 @@ def process_document(document_path):
         combined_text += text + "\n\n"  # Add extracted text to the combined text
 
     # Split the document into chunks
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=3000, chunk_overlap=200)  # Adjust chunking
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)  # Adjust chunking
     texts = text_splitter.split_text(combined_text)
 
-    # Convert the chunks into Document objects
     documents = [Document(page_content=text) for text in texts]
 
     if os.path.isdir("./faiss_index"):
-        # Load the existing FAISS index
         db = FAISS.load_local("./faiss_index", embeddings, allow_dangerous_deserialization=True)
-        # Add the new documents to the existing index
         db.add_documents(documents)
     else:
-        # Create a new FAISS index if it doesn't exist
         db = FAISS.from_documents(documents=documents, embedding=embeddings)
     
-    # Save the FAISS index to disk
     db.save_local("./faiss_index")
     conversation_retrieval_chain = RetrievalQA.from_chain_type(
             llm=llm_hub,
@@ -108,35 +102,33 @@ def process_prompt(prompt):
 
     # Query the model to get the answer and source documents
     output = conversation_retrieval_chain({"question": prompt, "chat_history": chat_history})
-    answer = output["result"]
-    sources = output["source_documents"]
-    if(docs):
-        # Prepare the structured input using the extracted sources
-        structured_input = f"""
-        The following are extraction from various documents related to the question: '{prompt}'.
-        Please organize the content into subheadings and contents based on their relevance and give it relevant contents in a brief way:
+    answer = output["result"]     
+    # print("Hello World")
+    # print(sources)
+    # Prepare the structured input using the extracted sources
+    # structured_input = f"""
+    # Extract and organize only the most relevant information from the documents related to the prompt: '{prompt}' and the provided answer: '{answer}'.
+    # Structure the content into concise subheadings and include minimal details directly related to the prompt and answer.
+    # """
 
-        """
-        
-        for i, doc in enumerate(sources):
-            # Add each source document's content
-            structured_input += f"Source {i + 1}:\n{doc.page_content.strip()}\n\n"
-        
-        # Create a prompt for structuring the content
-        structuring_prompt = f"""
-        Please organize the following text into clear subheadings and contents:
-        {structured_input}
-        """
+    # for i, doc in enumerate(sources):
+    #     # Add each source document's content
+    #     structured_input += f"Source {i + 1}:\n{doc.page_content.strip()}\n\n"
+    # #print(structured_input)
+    # # Create a prompt for structuring the content
+    # structuring_prompt = f"""
+    # Please organize the following text into clear subheadings and contents:
+    # {structured_input}
+    # """
 
-        # Stream the structured output from the LLM using ChatNVIDIA
-        structured_output = ""
-        for chunk in llm_hub.stream([{"role": "user", "content": structuring_prompt}]):
-            structured_output += chunk.content
+    # # Stream the structured output from the LLM using ChatNVIDIA
+    # structured_output = ""
+    # for chunk in llm_hub.stream([{"role": "user", "content": structuring_prompt}]):
+    #     structured_output += chunk.content
+    # print(structured_output)
 
-        # Combine the answer and structured output into a single string
-        combined_output = f"**Answer:**\n{answer}\n\n**Extraction:**\n{structured_output}"
+    # Combine the answer and structured output into a single string
 
-        return combined_output
     return answer
 
 
