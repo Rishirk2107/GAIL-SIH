@@ -160,7 +160,7 @@ const Sidebar = () => {
                         {/* User Icon and Username */}
                         <div className="flex items-center gap-2 mb-4 p-3 rounded-full hover:bg-[#000000] hover:text-[#508ec5] bg-[#2a2f33] text-white">
                             <img src={assets.user_icon} alt="User" className="w-6 h-6 rounded-full" />
-                            <p className="text-sm md:text-base">{ username || 'User'}</p>
+                            <p className="text-sm md:text-base">{ username || 'Rishi'}</p>
                         </div>
 
                         {/* Logout */}

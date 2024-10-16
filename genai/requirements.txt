@@ -3,7 +3,7 @@ torch
 langchain-core
 langchain-community
 langchain-nvidia-ai-endpoints
-pypdf
+PyMuPDF
 sentence-transformers==2.2.2
 python-dotenv
 InstructorEmbedding
@@ -11,3 +11,4 @@ pyproject-toml
 python-multipart
 tokenizers==0.19.0
 chromadb==0.3.29
+faiss-cpu

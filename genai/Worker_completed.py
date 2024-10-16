@@ -94,6 +94,26 @@ def process_document(document_path):
         )
     docs=True
     
+def generate_summary(extraction, prompt):
+    summary_prompt = (
+        f"Based on the following extraction and the question, provide a detailed summary if the question is available in the PDF, otherwise indicate unavailability:\n\n"
+        f"Extraction:\n{extraction}\n\n"
+        f"Question:\n{prompt}\n\n"
+        f"Summary:"
+    )
+    
+    # Create a list of messages
+    messages = [{"role": "user", "content": summary_prompt}]
+    
+    # Initialize an empty string to hold the response
+    generated_text = ""
+    
+    # Stream the response
+    for chunk in llm_hub.stream(messages):
+        generated_text += chunk.content
+    
+    return generated_text.strip()
+
 
 def process_prompt(prompt):
     global conversation_retrieval_chain
@@ -102,11 +122,13 @@ def process_prompt(prompt):
 
     # Query the model to get the answer and source documents
     output = conversation_retrieval_chain({"question": prompt, "chat_history": chat_history})
-    answer = output["result"]     
+    answer = output["result"]
+    sources = output["source_documents"] 
+    extraction = "\n".join([source.page_content for source in sources])
     # print("Hello World")
     # print(sources)
     # Prepare the structured input using the extracted sources
-    # structured_input = f"""
+    # structured_input = f"""   
     # Extract and organize only the most relevant information from the documents related to the prompt: '{prompt}' and the provided answer: '{answer}'.
     # Structure the content into concise subheadings and include minimal details directly related to the prompt and answer.
     # """
@@ -129,7 +151,7 @@ def process_prompt(prompt):
 
     # Combine the answer and structured output into a single string
 
-    return answer
+    return generate_summary(extraction,prompt)
 
 
 # Initialize the language model

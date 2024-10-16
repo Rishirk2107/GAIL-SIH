@@ -1,0 +1,31 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - '3001:3001'  # Backend on port 3001
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env  # Specify the path to your .env file
+    environment:
+      - NODE_ENV=
+      
+  genai:
+    build: ./genai
+    ports:
+      - '8000:8000'  # Frontend on port 3000
+    volumes:
+      - ./genai:/app
+    env_file:
+      - ./genai/.env
+    environment:
+      - NODE_ENV=development
+
+  frontend:
+    build: ./frontend
+    ports:
+      - '5173:5173'  # Frontend on port 5173
+    stdin_open: true
+    tty: true
+    environment:
+      - NODE_ENV=development
