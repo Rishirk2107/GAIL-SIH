@@ -1,67 +1,71 @@
 import os
 import torch
-import fitz  # PyMuPDF
+import fitz  
 from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
-from langchain_community.embeddings import HuggingFaceInstructEmbeddings
-from langchain_nvidia_ai_endpoints import ChatNVIDIA
+from langchain_community.embeddings import HuggingFaceEmbeddings 
+from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
+from langchain.vectorstores import FAISS
 from langchain_community.llms import HuggingFaceEndpoint
 from langchain.docstore.document import Document
+import getpass
 
-# Load environment variables
+
 load_dotenv()
 
-# Check for GPU availability and set the appropriate device for computation
+
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-# Global variables
+
 conversation_retrieval_chain = None
 chat_history = []
 llm_hub = None
 embeddings = None
-docs=False
+
 
 def init_llm():
     global llm_hub, embeddings
 
-    # Set up the environment variable for HuggingFace and initialize the desired model
     os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv('HUGGING_FACE_TOKEN')
-    model_id = "mistralai/Mistral-7B-Instruct-v0.3"
     
-    # Initialize the model with the correct task without overriding
-    llm_hub = ChatNVIDIA(
-        model="meta/llama-3.1-8b-instruct",
-        api_key=os.getenv("NVIDIA_KEY"), 
-        temperature=0.2,
-        top_p=0.7,
-        max_tokens=600,
-    )
+    if "GROQ_API_KEY" not in os.environ:
+        os.environ["GROQ_API_KEY"] = getpass.getpass("Enter your Groq API key: ")
 
-    # Initialize embeddings using a pre-trained model to represent the text data
-    embeddings = HuggingFaceInstructEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    from langchain_groq import ChatGroq
+    llm_hub = ChatGroq(model="llama3-8b-8192")
+
+    # Replace HuggingFaceInstructEmbeddings with HuggingFaceEmbeddings
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 def load_faiss_index():
     global conversation_retrieval_chain
-    if os.path.isdir("./faiss_index"):
 
-        # Load the saved FAISS index with dangerous deserialization allowed
-        db = FAISS.load_local("./faiss_index", embeddings, allow_dangerous_deserialization=True)
+    
+    if embeddings is None:
+        raise ValueError("Embeddings model is not initialized.")
 
-        # Build the QA chain, which utilizes the LLM and retriever for answering questions
+    if not os.path.exists("./faiss_index"):
+        print("FAISS index not found, processing the document to create the index...")
+       
+        print("Index created successfully!")
+    else:
+        
+        db = FAISS.load_local("./faiss_index", embeddings,allow_dangerous_deserialization=True)
+
+        
         conversation_retrieval_chain = RetrievalQA.from_chain_type(
             llm=llm_hub,
             chain_type="stuff",
             retriever=db.as_retriever(search_type="mmr", search_kwargs={'k': 6, 'lambda_mult': 0.25}),
-            return_source_documents=True,
+            return_source_documents=False,
             input_key="question"
         )
+        print("FAISS index loaded successfully.")
 
-# Function to process a PDF document
 def process_document(document_path):
-    global conversation_retrieval_chain,docs
+    global conversation_retrieval_chain
 
     # Load the document with PyMuPDF
     doc = fitz.open(document_path)
@@ -70,89 +74,73 @@ def process_document(document_path):
     # Iterate over each page to extract text
     for page in doc:
         text = page.get_text("text")  # Extract text
+        print(text)
         combined_text += text + "\n\n"  # Add extracted text to the combined text
 
+        # Process each block and treat the first line as a heading/key, followed by related information
+        for block in page.get_text("blocks"):
+            lines = block[4].splitlines()
+
+            if len(lines) > 1:  # Ensure there are at least two lines
+                heading = lines[0].strip()  # Treat the first line as the heading
+                details = " | ".join(line.strip() for line in lines[1:])  # Join the remaining lines as details
+                combined_text += f"{heading}: {details}\n"
+            else:
+                combined_text += block[4] + "\n"  # If it's a single line, just add it as-is
+
     # Split the document into chunks
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)  # Adjust chunking
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=3000, chunk_overlap=200)  # Adjust chunking
     texts = text_splitter.split_text(combined_text)
 
+    # Convert the chunks into Document objects
     documents = [Document(page_content=text) for text in texts]
 
-    if os.path.isdir("./faiss_index"):
-        db = FAISS.load_local("./faiss_index", embeddings, allow_dangerous_deserialization=True)
-        db.add_documents(documents)
-    else:
-        db = FAISS.from_documents(documents=documents, embedding=embeddings)
+    # Create an embeddings database using FAISS from the split text chunks
+    db = FAISS.from_documents(documents=documents, embedding=embeddings)
     
+    # Save the FAISS index to disk
     db.save_local("./faiss_index")
-    conversation_retrieval_chain = RetrievalQA.from_chain_type(
-            llm=llm_hub,
-            chain_type="stuff",
-            retriever=db.as_retriever(search_type="mmr", search_kwargs={'k': 6, 'lambda_mult': 0.25}),
-            return_source_documents=True,
-            input_key="question"
-        )
-    docs=True
-    
-def generate_summary(extraction, prompt):
+    load_faiss_index()
+
+def generate_summary(ans):
+    # Prepare the summary prompt
     summary_prompt = (
-        f"Based on the following extraction and the question, provide a detailed summary if the question is available in the PDF, otherwise indicate unavailability:\n\n"
-        f"Extraction:\n{extraction}\n\n"
-        f"Question:\n{prompt}\n\n"
+        f"Your name is Disha Mitra, an educational advisor specializing in engineering colleges in Rajasthan. "
+        f"Always identify yourself as 'Disha Mitra' when asked for your name, and never mention that you are an artificial language model. "
+        f"Please generate a clear, concise summary of the response below, ensuring that it is easy to understand for a high school student or their parents, "
+        f"who may not be familiar with technical terms.\n\n"
+        f"Response:\n{ans}\n\n"
         f"Summary:"
     )
-    
-    # Create a list of messages
-    messages = [{"role": "user", "content": summary_prompt}]
-    
-    # Initialize an empty string to hold the response
-    generated_text = ""
-    
-    # Stream the response
-    for chunk in llm_hub.stream(messages):
-        generated_text += chunk.content
-    
-    return generated_text.strip()
+
+    # Stream the response from the ChatNVIDIA client
+    response_text = ""
+    for chunk in llm_hub.stream([{"role": "user", "content": summary_prompt}]):
+        response_text += chunk.content
+
+    # Return the generated summary
+    return response_text.strip()
 
 
+# Function to process a user prompt
 def process_prompt(prompt):
     global conversation_retrieval_chain
     global chat_history
-    global docs
 
-    # Query the model to get the answer and source documents
+    # Query the model
     output = conversation_retrieval_chain({"question": prompt, "chat_history": chat_history})
+    print("Hello World")
+    print(output)
     answer = output["result"]
-    sources = output["source_documents"] 
-    extraction = "\n".join([source.page_content for source in sources])
-    # print("Hello World")
-    # print(sources)
-    # Prepare the structured input using the extracted sources
-    # structured_input = f"""   
-    # Extract and organize only the most relevant information from the documents related to the prompt: '{prompt}' and the provided answer: '{answer}'.
-    # Structure the content into concise subheadings and include minimal details directly related to the prompt and answer.
-    # """
 
-    # for i, doc in enumerate(sources):
-    #     # Add each source document's content
-    #     structured_input += f"Source {i + 1}:\n{doc.page_content.strip()}\n\n"
-    # #print(structured_input)
-    # # Create a prompt for structuring the content
-    # structuring_prompt = f"""
-    # Please organize the following text into clear subheadings and contents:
-    # {structured_input}
-    # """
+    # Generate and apply the summary
+    summary = generate_summary(answer)
 
-    # # Stream the structured output from the LLM using ChatNVIDIA
-    # structured_output = ""
-    # for chunk in llm_hub.stream([{"role": "user", "content": structuring_prompt}]):
-    #     structured_output += chunk.content
-    # print(structured_output)
+    # Update the chat history
+    chat_history.append((prompt, summary))
 
-    # Combine the answer and structured output into a single string
-
-    return generate_summary(extraction,prompt)
-
+    # Return the summary
+    return summary
 
 # Initialize the language model
 init_llm()
@@ -160,8 +148,8 @@ init_llm()
 # Load the FAISS index
 load_faiss_index()
 
-# Ensure the document is processed
-# process_document("path_to_your_pdf.pdf")
+# # Ensure the document is processed
+# process_document("Rezume.pdf")
 
-# Test processing a prompt
-# print(process_prompt("Example prompt here"))
+# # Test processing a prompt
+# print(process_prompt("list out the tech tools"))
